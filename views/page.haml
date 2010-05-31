@@ -1,0 +1,25 @@
+#content
+  ~ @page.to_html
+  - if @page.date
+    .date
+      Posted on
+      = format_date(@page.date)
+
+  - @page.pages.each do |page|
+    = haml :summary, :layout => false, :locals => { :article => page, :heading => :h3 }
+
+  - unless @page.articles.empty?
+    %h2.articles= "Articles on #{@page.heading}"
+  
+  - @page.articles.each do |article|
+    = haml :summary, :layout => false, :locals => { :article => article, :heading => :h3 }
+
+  - unless @page.categories.empty?
+    .categories
+      Filed under
+      - @page.categories.each do |category|
+        %a{ :href => category.abspath.downcase }= category.heading
+
+  = haml :social, :layout => false
+  = haml :feed, :locals => { :title => @site_title }, :layout => false
+  = haml :comments, :layout => false

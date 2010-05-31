@@ -1,0 +1,50 @@
+!!!
+%html{ :lang => "en", "xml:lang" => "en", :xmlns => 'http://www.w3.org/1999/xhtml' }
+  %head
+    %meta{ "http-equiv" => "content-type", "content" => "text/html; charset=utf-8" }
+    - if @description
+      %meta{ "name" => "description", "content" => @description }
+    - if @keywords
+      %meta{ "name" => "keywords", "content" => @keywords }
+    %title= @title
+    %link{ :href => "/css/master.css", :media => "screen", :rel => "stylesheet", :type => "text/css" }
+    %link{ :href => "/css/syntax.css", :media => "screen", :rel => "stylesheet", :type => "text/css" }
+    %link{ :href => "http://feeds.feedburner.com/TrueParadox", :rel => "alternate", :type => "application/atom+xml" }
+  %body{ :class => @body_class }
+    #container
+      #wrapper
+        - if @body_class == "home"
+          %h1.site-title
+            = @heading
+            %small 
+              = @motto
+        - else
+          .site-title
+            = @heading
+            %small 
+              = @motto
+
+          .breadcrumb
+            %a{ :href => "/blog" } Home
+            
+            - if @page
+              &gt;
+              - if @page.parent
+                %a{ :href => @page.parent.abspath }= @page.parent.heading
+                &gt;
+              = @page.heading
+        
+        = yield
+
+        #sidebar
+          = haml :me, :layout => false
+          = haml :feed, :layout => false
+          = haml :categories, :layout => false
+
+        #footer
+          Copyright 2010
+          %a{ :href => '/' }= 'True Paradox'
+              
+              
+
+    = haml :analytics, :layout => false

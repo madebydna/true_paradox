@@ -1,0 +1,57 @@
+
+html, body {
+  color: #333;
+  font-size:14px;
+  font-family: "Helvetica Neue",Arial,Helvetica,sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height:1.18em;
+  margin-bottom:1.467em;
+}
+
+p, li, blockquote {
+  line-height:1.467em;
+  margin-bottom:1.467em;
+}
+
+a {
+  color:#aa0000;
+}
+
+ul {
+  list-style-type:disc;
+  margin-left:1em;
+}
+
+#container {
+  width:500px;
+  margin:20px auto;
+}
+
+
+
+
+h2 {
+  color:#333;
+  font-size:18px;
+}
+
+
+
+/* Header */
+
+h1 {
+  font-size: 2em;
+  color:#565656;
+}
+
+nav ul {
+  margin:2em 0;
+  text-align:center;
+}
+
+nav ul li {
+  display:inline;
+  margin-right:2em
+}
