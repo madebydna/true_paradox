@@ -23,7 +23,7 @@ One way to accomplish this is through regular expressions:
   end
 </highlight> 
 
-In certain circumstances, though, it is desirable to retain the HTML formatting. So we need an HTML-aware truncator, one that would only use the actual text to determine content length, make sure all the HTML tags are properly closed and HTML entities such as &amp;amp; are left intact. 
+In certain circumstances, though, it is desirable to retain the HTML formatting. So we need an HTML-aware truncator, one that would only use the actual text to determine content length, make sure that all the HTML tags are properly closed and that HTML entities, such as &amp;amp;, are left intact.
 
 For example, if we wanted to truncate the following markup
 <highlight lang="html">
@@ -36,11 +36,9 @@ to 15 characters, then we expect this as a result:
   This text is &lt;strong&gt;bo&lt;/strong&gt;
 </highlight>
 
-Googling for a solution I found this blog post with a great looking code snippet [Rails truncate helper that handles HTML tags and entities](http://henrik.nyh.se/2008/01/rails-truncate-html-helper) by Henrik Nyh, that uses Hpricot to accomplish this task. However I had some problems getting this code to work in some test cases, specifically in scenarios involving ul and li tags. In the end I could not discern any specific pattern for the failures, so I decided to try and port the same code to Nokogiri and lo and behold everything worked as it should.
+Googling for a solution, I found a blog post [Rails truncate helper that handles HTML tags and entities](http://henrik.nyh.se/2008/01/rails-truncate-html-helper) by Henrik Nyh with a great looking code snippet, that uses Hpricot to accomplish just that. However I had some problems getting this code to work in some test cases, specifically in scenarios involving nested ul and li tags. In the end I could not discern any specific pattern for the failures, so I decided to try and port the same code to Nokogiri and lo and behold everything worked as it should.
 
-There is actually more than one advantage to traversing the text fragment with Nokogiri: first, it is purportedly faster than Hpricot and secondly, it natively takes care of HTML entities, while Hpricot does not recognize them and thus requires the use of regular expressions.
-
-An added bonus is that both Hpricot and Nokogiri automatically fix malformed HTML. 
+There are actually some advantages to traversing the text fragment with Nokogiri: first, it is purportedly faster than Hpricot and secondly, it natively takes care of HTML entities, while Hpricot does not recognize them and thus requires the use of regular expressions. An added bonus with both HTML parsers is that they automatically fix malformed HTML. 
 
 So here's the final Nokogiri version:
 
