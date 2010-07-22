@@ -1,0 +1,90 @@
+date: June 04 2010
+categories: rails, ruby
+summary: Two means truncating HTML text without mangling the markup. One solution works by stripping out the HTML tags altogether and the other uses Nokogiri to maintain proper HTML syntax during truncation
+
+#A Ruby Helper to Cleanly Truncate HTML Text
+
+A problem that occasionally crops up, is how to best truncate text with HTML markup, e.g. in order to display the first lines of a blog post or the initial sentences of a product description. The Rails helper method #truncate does not take care of the problem caused by chopped HTML tags or missing end tags.
+
+Things are relatively simple if the markup does not need to be taken into consideration. Then it is just a matter of efficiently stripping out all HTML tags and sending the remainder off to the truncate method. 
+
+One way to accomplish this is through regular expressions:
+
+<highlight lang="ruby">
+  module TextHelper
+
+    TAG_PATTERN = %r{(&lt;/?.*?&gt;)}
+
+    def truncate_html(text, max_length = 30, ellipsis = "...")
+      tag_free = text.gsub(TAG_PATTERN, '')
+      truncate(tag_free, :length => max_length, :omission => ellipsis)
+    end
+
+  end
+</highlight> 
+
+In certain circumstances, though, it is desirable to retain the HTML formatting. So we need an HTML-aware truncator, one that would only use the actual text to determine content length, make sure that all the HTML tags are properly closed and that HTML entities, such as &amp;amp;, are left intact.
+
+For example, if we wanted to truncate the following markup
+<highlight lang="html">
+  This text is &lt;strong&gt;bold&lt;/strong&gt; and &lt;i&gt;beautiful&lt;/i&gt;.
+</highlight>
+
+to 15 characters, then we expect this as a result:
+
+<highlight lang="html">
+  This text is &lt;strong&gt;bo&lt;/strong&gt;
+</highlight>
+
+Googling for a solution, I found a blog post [Rails truncate helper that handles HTML tags and entities](http://henrik.nyh.se/2008/01/rails-truncate-html-helper) by Henrik Nyh with a great looking code snippet, that uses Hpricot to accomplish just that. However I had some problems getting this code to work in some test cases, specifically in scenarios involving nested ul and li tags. In the end I could not discern any specific pattern for the failures, so I decided to try and port the same code to Nokogiri and lo and behold everything worked as it should.
+
+There are actually some advantages to traversing the text fragment with Nokogiri: first, it is purportedly faster than Hpricot and secondly, it natively takes care of HTML entities, while Hpricot does not recognize them and thus requires the use of regular expressions. An added bonus with both HTML parsers is that they automatically fix malformed HTML. 
+
+So here's the final Nokogiri version:
+
+<highlight lang="ruby">
+  require "rubygems"
+  require "nokogiri"
+  
+  module TextHelper
+
+    def truncate_html(text, max_length, ellipsis = "...")
+      ellipsis_length = ellipsis.length     
+      doc = Nokogiri::HTML::DocumentFragment.parse text
+      content_length = doc.inner_text.length
+      actual_length = max_length - ellipsis_length
+      content_length &gt; actual_length ? doc.truncate(actual_length).inner_html + ellipsis : text.to_s
+    end
+
+  end
+
+  module NokogiriTruncator
+    module NodeWithChildren
+      def truncate(max_length)
+        return self if inner_text.length &lt;= max_length
+        truncated_node = self.dup
+        truncated_node.children.remove
+
+        self.children.each do |node|
+          remaining_length = max_length - truncated_node.inner_text.length
+          break if remaining_length &lt;= 0
+          truncated_node.add_child node.truncate(remaining_length)
+        end
+        truncated_node
+      end
+    end
+
+    module TextNode
+      def truncate(max_length)
+        Nokogiri::XML::Text.new(content[0..(max_length - 1)], parent)
+      end
+    end
+
+  end
+
+  Nokogiri::HTML::DocumentFragment.send(:include, NokogiriTruncator::NodeWithChildren)
+  Nokogiri::XML::Element.send(:include, NokogiriTruncator::NodeWithChildren)
+  Nokogiri::XML::Text.send(:include, NokogiriTruncator::TextNode)
+</highlight>
+
+You can add this code as a helper file in RAILS_ROOT/app/helpers/text_helper.rb
