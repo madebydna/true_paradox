@@ -1,0 +1,12 @@
+date: July 22 2010
+categories: linux
+summary: Quick and simple shell script to resize an entire folder of images using ImageMagick
+
+#Batch Resizing a Folder of Images Using ImageMagick and the Command Line
+
+Note to self. This is a useful little shell script to resize an entire folder of images, using ImageMagick. If you 
+don't specify a target folder, this command will overwrite your existing images.
+
+<highlight lang="ruby">
+$ find . -name "*.jpg" -exec convert -scale 50% -quality 75 {} ~/target_folder/{} \;
+</highlight>
